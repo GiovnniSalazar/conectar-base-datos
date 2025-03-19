@@ -1,7 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.Data;
+using MongoDB.Driver;
 [ApiController]
 [Route("conexion")]
-public class Conexion : Controller{
+public class Conexion : Controller {
     [HttpGet("sql")]
     public IActionResult ListarCarrerasSql(){
         List<CarreraSQL> lista = new List<CarreraSQL>();
@@ -16,16 +19,27 @@ public class Conexion : Controller{
 
         while (reader.Read()){
             CarreraSQL carrera = new CarreraSQL();
-            Carrera.IdCarrera = reader.GetInt16("IdCarrera")
-            Carrera.Carrera = reader.GetString("Carrera")
+            carrera.IdCarrera = reader.GetInt16("IdCarrera");
+            carrera.Carrera = reader.GetString("Carrera");
+
+            lista.Add(carrera);
         }
+
+        reader.Close();
+        conn.Close();
 
         return Ok(lista);
     }
 
     [HttpGet("mongo")]
     public IActionResult ListarSalonesMongoDB(){
-        return Ok("Me estoy conectando a MongoDb");
+       MongoClient client = new MongoClient(CadenasConexion.MONGO_DB);
+       var db = client.GetDatabase("Practica2_Giovanni_Diego");
+       var collection = db.GetCollection<SalonMongo>("Salones");
+
+       var lista = collection.Find(FilterDefinition<SalonMongo>.Empty).ToList();
+
+       return Ok(lista);
     }
    
 }
